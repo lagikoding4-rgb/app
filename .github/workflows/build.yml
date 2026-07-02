@@ -15,6 +15,11 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Install Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.0'
+
       - name: Extract ZIP
         run: |
           ZIP=$(ls *.zip 2>/dev/null | head -1)
@@ -22,16 +27,10 @@ jobs:
           unzip -o "$ZIP" -d extracted
           echo "=== Isi extracted ==="
           ls extracted/
-          echo "=== Isi extracted/bonsamp_final ==="
-          ls extracted/bonsamp_final/ 2>/dev/null || ls extracted/*/  2>/dev/null || true
-          cp -r extracted/bonsamp_final/. . 2>/dev/null || cp -r extracted/*/. . 2>/dev/null || cp -r extracted/. .
-          echo "=== Cek gradlew ==="
+          cp -r extracted/bonsamp_final/. . 2>/dev/null || cp -r extracted/*/. . 2>/dev/null || true
+          echo "=== Cek file penting ==="
           ls -la gradlew 2>/dev/null || echo "gradlew tidak ada"
-          echo "=== Cek app/ ==="
           ls app/ 2>/dev/null || echo "folder app tidak ada"
-
-      - name: Give permission
-        run: chmod +x gradlew
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
@@ -40,7 +39,7 @@ jobs:
         run: yes | sdkmanager --licenses || true
 
       - name: Build Debug APK
-        run: ./gradlew assembleDebug --stacktrace 2>&1 | tail -150
+        run: gradle assembleDebug --project-dir . --stacktrace 2>&1 | tail -150
 
       - name: Cek hasil APK
         run: find . -name "*.apk" 2>/dev/null || echo "APK tidak ditemukan"
