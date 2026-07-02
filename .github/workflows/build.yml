@@ -15,22 +15,18 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Install Gradle
+      - name: Install Gradle 7.6
         uses: gradle/actions/setup-gradle@v3
         with:
-          gradle-version: '8.0'
+          gradle-version: '7.6'
 
       - name: Extract ZIP
         run: |
           ZIP=$(ls *.zip 2>/dev/null | head -1)
           echo "Ketemu ZIP: $ZIP"
           unzip -o "$ZIP" -d extracted
-          echo "=== Isi extracted ==="
-          ls extracted/
           cp -r extracted/bonsamp_final/. . 2>/dev/null || cp -r extracted/*/. . 2>/dev/null || true
-          echo "=== Cek file penting ==="
-          ls -la gradlew 2>/dev/null || echo "gradlew tidak ada"
-          ls app/ 2>/dev/null || echo "folder app tidak ada"
+          ls -la
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
@@ -38,8 +34,11 @@ jobs:
       - name: Accept Licenses
         run: yes | sdkmanager --licenses || true
 
+      - name: Install build tools
+        run: sdkmanager "platforms;android-34" "build-tools;34.0.0" || true
+
       - name: Build Debug APK
-        run: gradle assembleDebug --project-dir . --stacktrace 2>&1 | tail -150
+        run: gradle assembleDebug --stacktrace 2>&1 | tail -150
 
       - name: Cek hasil APK
         run: find . -name "*.apk" 2>/dev/null || echo "APK tidak ditemukan"
@@ -50,4 +49,3 @@ jobs:
           name: Bonsamp-APK
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: warn
-          
