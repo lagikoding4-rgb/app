@@ -15,15 +15,16 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Install Gradle 7.6
-        uses: gradle/actions/setup-gradle@v3
-        with:
-          gradle-version: '7.6'
+      - name: Install Gradle via apt
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y gradle
+          gradle --version
 
       - name: Extract ZIP
         run: |
           ZIP=$(ls *.zip 2>/dev/null | head -1)
-          echo "Ketemu ZIP: $ZIP"
+          echo "ZIP: $ZIP"
           unzip -o "$ZIP" -d extracted
           cp -r extracted/bonsamp_final/. . 2>/dev/null || cp -r extracted/*/. . 2>/dev/null || true
           ls -la
@@ -31,16 +32,17 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Accept Licenses
-        run: yes | sdkmanager --licenses || true
-
-      - name: Install build tools
-        run: sdkmanager "platforms;android-34" "build-tools;34.0.0" || true
+      - name: Install SDK Platform
+        run: |
+          yes | sdkmanager --licenses || true
+          sdkmanager "platforms;android-34" "build-tools;34.0.0"
 
       - name: Build Debug APK
-        run: gradle assembleDebug --stacktrace 2>&1 | tail -150
+        run: |
+          export ANDROID_HOME=$ANDROID_SDK_ROOT
+          gradle assembleDebug --stacktrace 2>&1 | tail -200
 
-      - name: Cek hasil APK
+      - name: Cek APK
         run: find . -name "*.apk" 2>/dev/null || echo "APK tidak ditemukan"
 
       - name: Upload APK
