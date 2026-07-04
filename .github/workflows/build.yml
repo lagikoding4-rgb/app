@@ -23,13 +23,23 @@ jobs:
           cp -r extracted/bonsamp_final/. . 2>/dev/null || cp -r extracted/*/. . 2>/dev/null || true
           ls -la
 
+      - name: Fix Gradle version compatibility
+        run: |
+          # Turunkan AGP ke 7.4.2 yang support Gradle 7.6
+          sed -i "s/com.android.tools.build:gradle:8.1.0/com.android.tools.build:gradle:7.4.2/g" build.gradle
+          sed -i "s/compileSdk 34/compileSdk 33/g" app/build.gradle
+          sed -i "s/targetSdk 34/targetSdk 33/g" app/build.gradle
+          sed -i "s/compileSdkVersion 34/compileSdkVersion 33/g" app/build.gradle
+          echo "=== build.gradle ==="
+          cat build.gradle
+          echo "=== app/build.gradle ==="
+          cat app/build.gradle
+
       - name: Download Gradle 7.6.4
         run: |
           wget -q https://services.gradle.org/distributions/gradle-7.6.4-bin.zip -O gradle.zip
           unzip -q gradle.zip -d /opt/gradle
-          export PATH="/opt/gradle/gradle-7.6.4/bin:$PATH"
           echo "/opt/gradle/gradle-7.6.4/bin" >> $GITHUB_PATH
-          gradle --version
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
@@ -37,7 +47,7 @@ jobs:
       - name: Install SDK Platform
         run: |
           yes | sdkmanager --licenses || true
-          sdkmanager "platforms;android-34" "build-tools;34.0.0"
+          sdkmanager "platforms;android-33" "build-tools;33.0.2"
 
       - name: Build Debug APK
         run: |
